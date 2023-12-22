@@ -1,0 +1,90 @@
+push:
+  image: debian:latest
+  resource_group: $CI_COMMIT_REF_NAME
+  script:
+    - date '+%A %W %Y %X' >> ci-execution-times.txt
+  after_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_SERVER_HOST_KEYS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
+    - apt-get update -y && apt-get install -qy git-core
+    - git checkout $CI_COMMIT_REF_NAME
+    - git remote set-url origin git@$CI_SERVER_HOST:$CI_PROJECT_PATH.git
+
+    - git config --global user.email 'mengineer1998@gmail.com'
+    - git config --global user.name 'masoomeh-1998'
+
+    # - git add ci-execution-times.txt
+
+    # - git commit -m "Update ci-execution-times.txt via CI"
+
+    - git push origin $CI_COMMIT_REF_NAME -o ci.skip
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+
+
+docker-build:
+  # Use the official docker image.
+  image: docker:cli
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    CI_REGISTRY_USER: "mengineer1998@gmail.com"
+    CI_REGISTRY_PASSWORD: "mm0371557038"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build --pull -t "$DOCKER_IMAGE_NAME" .
+    - docker push "$DOCKER_IMAGE_NAME"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
+        docker push "$CI_REGISTRY_IMAGE:latest"
+      fi
+  # Run this job in a branch where a Dockerfile exists
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
+
+
+
+
+image: python:latest
+
+test:
+  script:
+    - pip install ruff tox  # you can also use tox
+    - pip install --editable ".[test]"
+    - tox -e py,ruff
+
+run:
+  script:
+    - pip install .
+    # run the command here
+  artifacts:
+    paths:
+      - build/*
+
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy:
+  stage: deploy
+  script: 
+    - ssh <project@sserver> "cd /home/project; 
+        docker login -u $CI_REGISTRY_USER 
+          -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
+        docker-compose up --force-recreate --build -d
+        docker image prune -f"
+  environment: production
+
+
