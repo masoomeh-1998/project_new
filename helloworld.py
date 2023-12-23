@@ -7,5 +7,5 @@ def read_root():
     return {"Hello": "World"}
 
 
-print(read_root())
+
 
