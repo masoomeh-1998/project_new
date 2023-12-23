@@ -6,7 +6,7 @@ FROM ubuntu:latest
 # RUN apt-get install -y software-properties-common
 # RUN add-apt-repository -y ppa:deadsnakes/ppa
 RUN apt-get -y update
-RUN apt-get install -y python
+RUN apt-get install -y python3
 RUN apt-get install -y fastapi
 ADD helloworld.py /project/helloworld.py
 WORKDIR /project
