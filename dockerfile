@@ -5,10 +5,10 @@ FROM ubuntu:latest
 # RUN echo 'deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/azurecore/ trusty main' >> /etc/apt/sources.list.d/azure-public-trusty.list
 # RUN apt-get install -y software-properties-common
 # RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN sudo apt install -y wget
-RUN sudo apt  -y update
-RUN sudo apt  install -y python3
-RUN sudo apt install -y fastapi
+RUN sudo apt-get install -y wget
+RUN sudo apt-get update -y
+RUN sudo apt-get install -y python3
+RUN sudo apt-get install -y fastapi
 ADD helloworld.py /project/helloworld.py
 WORKDIR /project
 CMD [ "python" ,"helloworld.py" ]
