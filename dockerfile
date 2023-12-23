@@ -6,6 +6,7 @@ FROM ubuntu:latest
 # RUN apt-get install -y software-properties-common
 # RUN add-apt-repository -y ppa:deadsnakes/ppa
 RUN sudo apt-get install -y curl apt-utils wget unzip
+RUN wget http://www.us.apache.org/dist/tomcat/tomcat-6/v6.0.44/bin/apache-tomcat-6.0.44.tar.gz
 RUN sudo apt-get update -y
 RUN sudo apt-get install -y python3
 RUN sudo apt-get install -y fastapi
