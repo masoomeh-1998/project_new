@@ -1,0 +1,11 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script: 
+      - docker build --build-arg -t helloworld:latest .
+      - cd /srv/helloworld; docker-compose up -d;docker-compose ps
+  environment: production
+
+
